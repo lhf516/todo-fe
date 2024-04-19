@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Helmet } from "react-helmet";
 import { Todo } from "./components/Todo";
 
@@ -7,6 +6,7 @@ import "./App.css";
 import TodoList from "./pages/TodoList";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import TodoDetail from "./pages/TodoDetail";
+import { read } from "./services/apiServices";
 
 function App() {
   const apiUrl = `${process.env.REACT_APP_BASE_URL || ""}/api/todos`;
@@ -16,7 +16,7 @@ function App() {
   useEffect(() => {
     const fetchTodos = async () => {
       try {
-        const response = await axios.get(apiUrl);
+        const response = await read("/api/todos");
         console.log("response: ", response);
 
         setTodos(response.data); // Assuming your API returns an array of todos
@@ -30,7 +30,6 @@ function App() {
   }, [apiUrl]);
 
   const getPageTitle = (path: string) => {
-    console.log("path: ", path);
     if (path.includes("/todos/")) {
       return "Fungtech - Todo Detail";
     } else {
