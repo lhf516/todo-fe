@@ -1,16 +1,16 @@
 import React from "react";
-import { Todo } from "../components/Todo";
+import { Task } from "../interfaces/Task";
 
 interface TodoListProps {
-  todos: Todo[];
+  tasks: Task[];
 }
 
-const TodoList: React.FC<TodoListProps> = ({ todos }) => {
+const TodoList: React.FC<TodoListProps> = ({ tasks }) => {
   return (
     <ul>
-      {todos.map((todo) => (
-        <li key={todo.id}>
-          <a href={`todos/${todo.id}`}>{todo.title}</a>
+      {tasks.map((task) => (
+        <li key={task.id}>
+          <a href={`todos/${task.id}`}>{task.title}</a>
         </li>
       ))}
     </ul>
