@@ -1,57 +1,34 @@
-import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import {
-  Button,
-  Checkbox,
-  FormControlLabel,
-  TextField,
-  createTheme,
-} from "@mui/material";
-import { styled } from "@mui/system";
-import { Controller, useForm } from "react-hook-form";
-import { Task, UpdateTask } from "../interfaces/Task";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { Task } from "../interfaces/Task";
+import DetailComponent from "../components/DetailComponent";
+import { UUID } from "crypto";
+import { Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { update } from "../services/apiServices";
 
 interface TaskDetailProps {
-  tasks: Task[];
-  updateTask: (id: number, newTask: Task) => void;
+  open: boolean;
+  selectedTask: Task | null;
+  handleClose: () => void;
+  fetchTasks: () => void;
 }
 
-const customTheme = createTheme({
-  palette: {
-    primary: {
-      main: "#1976d2",
-      contrastText: "white",
-    },
-  },
-});
+const TaskDetail: React.FC<TaskDetailProps> = ({
+  open,
+  selectedTask,
+  handleClose,
+  fetchTasks,
+}) => {
+  const { reset } = useForm();
 
-const TaskDetail: React.FC<TaskDetailProps> = ({ tasks, updateTask }) => {
-  const { id } = useParams<{ id: string }>(); // Get id from URL
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [updatedTask, setUpdatedTask] = useState<UpdateTask>({
-    title: "",
-    detail: "",
-    completed: false,
-  });
-
-  const { control, handleSubmit, reset } = useForm();
-
-  useEffect(() => {
-    if (id && tasks.length > 0) {
-      const selectedTask = tasks.find((task) => {
-        return Number(task.id) === parseInt(id ?? "");
-      });
-      setSelectedTask(selectedTask || null);
-      console.log("selectedTask: ", selectedTask);
-      if (selectedTask) {
-        setUpdatedTask({
-          title: selectedTask.title,
-          detail: selectedTask.detail,
-          completed: selectedTask.completed,
-        });
-      }
+  const updateTask = async (id: UUID, newTask: Task) => {
+    try {
+      await update(`/api/todos/${id}`, newTask);
+    } catch (error) {
+      console.error(error);
+      // Handle errors appropriately, e.g., display error message to user
     }
-  }, [id, tasks]);
+  };
 
   const onSubmit = async (data: any) => {
     console.log("data: ", data);
@@ -62,63 +39,24 @@ const TaskDetail: React.FC<TaskDetailProps> = ({ tasks, updateTask }) => {
         detail: data.detail,
         completed: data.completed,
       };
-      updateTask(selectedTask.id, updatedTask);
+      await updateTask(selectedTask.id, updatedTask);
       reset(updatedTask);
+
+      fetchTasks();
+
+      handleClose();
     }
   };
 
-  const DetailComponent = styled("div")(({ theme }) => ({
-    color: theme.palette.primary.contrastText,
-    backgroundColor: theme.palette.primary.main,
-    padding: theme.spacing(1),
-    borderRadius: theme.shape.borderRadius,
-  }));
-
-  if (!selectedTask) {
-    return <p>Todo not found!</p>;
-  }
-
   return (
-    <DetailComponent theme={customTheme}>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Controller
-          name="title"
-          control={control}
-          defaultValue={updatedTask.title}
-          render={({ field }) => (
-            <TextField {...field} label="Title" variant="outlined" />
-          )}
-        />
-        <Controller
-          name="detail"
-          control={control}
-          defaultValue={updatedTask.detail}
-          render={({ field }) => (
-            <TextField {...field} label="Detail" variant="outlined" />
-          )}
-        />
-        <FormControlLabel
-          control={
-            <Controller
-              name="completed"
-              control={control}
-              defaultValue={updatedTask.completed}
-              render={({ field }) => (
-                <Checkbox
-                  {...field}
-                  checked={field.value}
-                  onChange={field.onChange}
-                />
-              )}
-            />
-          }
-          label="Completed"
-        />
-        <Button variant="contained" color="primary" type="submit">
-          Save Changes
-        </Button>
-      </form>
-    </DetailComponent>
+    selectedTask && (
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>My Task</DialogTitle>
+        <DialogContent>
+          <DetailComponent selectedTask={selectedTask} onSubmit={onSubmit} />
+        </DialogContent>
+      </Dialog>
+    )
   );
 };
 
