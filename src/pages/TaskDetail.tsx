@@ -4,7 +4,7 @@ import { Task } from "../interfaces/Task";
 import DetailComponent from "../components/DetailComponent";
 import { UUID } from "crypto";
 import { Dialog, DialogTitle, DialogContent } from "@mui/material";
-import { update } from "../services/apiServices";
+import { create, update } from "../services/apiServices";
 
 interface TaskDetailProps {
   open: boolean;
@@ -20,6 +20,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   fetchTasks,
 }) => {
   const { reset } = useForm();
+
+  const createTask = async (newTask: Task) => {
+    try {
+      await create(`/api/todos`, newTask);
+    } catch (error) {
+      console.error(error);
+      // Handle errors appropriately, e.g., display error message to user
+    }
+  };
 
   const updateTask = async (id: UUID, newTask: Task) => {
     try {
@@ -39,7 +48,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
         detail: data.detail,
         completed: data.completed,
       };
-      await updateTask(selectedTask.id, updatedTask);
+      if (selectedTask.id) {
+        await updateTask(selectedTask.id, updatedTask);
+      } else {
+        await createTask(updatedTask);
+      }
       reset(updatedTask);
 
       fetchTasks();
@@ -53,7 +66,11 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>My Task</DialogTitle>
         <DialogContent>
-          <DetailComponent selectedTask={selectedTask} onSubmit={onSubmit} />
+          <DetailComponent
+            selectedTask={selectedTask}
+            onSubmit={onSubmit}
+            handleClose={handleClose}
+          />
         </DialogContent>
       </Dialog>
     )

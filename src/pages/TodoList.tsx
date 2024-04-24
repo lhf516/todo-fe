@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { Task } from "../interfaces/Task";
 import {
+  Button,
   Grid,
+  IconButton,
   List,
   ListItem,
   ListItemButton,
   ListItemText,
   Typography,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import TaskDetail from "./TaskDetail";
 import { read } from "../services/apiServices";
+import DeleteTaskDialog from "../components/DeleteTaskDialog";
+import { UUID } from "crypto";
 
 const TodoList: React.FC = () => {
   const apiUrl = `${process.env.REACT_APP_BASE_URL || ""}/api/todos`;
   const [tasks, setTasks] = useState<Task[]>([]);
   const [open, setOpen] = React.useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
 
   const fetchTasks = async () => {
     try {
@@ -36,10 +42,29 @@ const TodoList: React.FC = () => {
   const handleOpen = (task: Task | null) => {
     setOpen(true);
     if (task) setSelectedTask(task);
+    else {
+      const newTask = {
+        title: "",
+        detail: "",
+        completed: false,
+      };
+      setSelectedTask(newTask);
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
+    setSelectedTask(null);
+  };
+
+  const handleOpenDeleteDialog = (task: Task | null) => {
+    console.log("task: ", task);
+    setOpenDeleteDialog(true);
+    if (task) setSelectedTask(task);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setOpenDeleteDialog(false);
     setSelectedTask(null);
   };
 
@@ -51,13 +76,31 @@ const TodoList: React.FC = () => {
       display="flex"
       flexDirection="column"
     >
-      <Typography variant="h3">MY TODO LIST</Typography>
-      <List sx={{ bgcolor: "background.paper" }} aria-label="contacts">
+      <Typography variant="h3">My Todo List</Typography>
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => handleOpen(null)}
+      >
+        New Task
+      </Button>
+
+      <List sx={{ bgcolor: "background.paper" }} aria-label="task">
         {tasks.map((task) => (
           <ListItem disablePadding key={task.id}>
             <ListItemButton onClick={() => handleOpen(task)}>
               <ListItemText primary={task.title} />
             </ListItemButton>
+            <IconButton
+              edge="end"
+              aria-label="delete"
+              onClick={() => {
+                handleOpenDeleteDialog(task);
+              }}
+            >
+              <DeleteIcon />
+            </IconButton>
           </ListItem>
         ))}
       </List>
@@ -66,6 +109,13 @@ const TodoList: React.FC = () => {
         open={open}
         selectedTask={selectedTask}
         handleClose={handleClose}
+        fetchTasks={fetchTasks}
+      />
+
+      <DeleteTaskDialog
+        openDeleteDialog={openDeleteDialog}
+        id={selectedTask?.id || null}
+        handleCloseDeleteDialog={handleCloseDeleteDialog}
         fetchTasks={fetchTasks}
       />
     </Grid>
