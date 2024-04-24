@@ -1,6 +1,8 @@
 # todo-fe
 Frontend for the Todo List Sample Project
 
+***Develop with React and Typescript***
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
